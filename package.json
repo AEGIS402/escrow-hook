@@ -1,0 +1,23 @@
+{
+  "name": "aegis402-insured-escrow-hook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AEGIS402 insured escrow Uniswap v4 hook MVP on a Sepolia fork.",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:fork": "hardhat test test/aegis-escrow-hook.fork.js --network hardhat",
+    "e2e:normal": "hardhat run scripts/e2e/normal.js --network hardhat",
+    "e2e:sandwich": "hardhat run scripts/e2e/sandwich.js --network hardhat",
+    "e2e": "npm run e2e:normal && npm run e2e:sandwich"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.1.0",
+    "@uniswap/v4-core": "^1.0.2",
+    "@uniswap/v4-periphery": "^1.0.2",
+    "chai": "^4.5.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "hardhat": "^2.26.3"
+  }
+}
