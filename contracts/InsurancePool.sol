@@ -13,6 +13,7 @@ contract InsurancePool {
 
     event VaultSet(address indexed vault);
     event FeeReporterSet(address indexed feeReporter);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event ReserveFunded(address indexed token, address indexed funder, uint256 amount);
     event ProtectionFeePaid(bytes32 indexed tradeId, address indexed token, address indexed payer, uint256 amount);
     event AuditFailedClaimPaid(
@@ -61,6 +62,12 @@ contract InsurancePool {
         if (newFeeReporter == address(0)) revert ZeroAddress();
         feeReporter = newFeeReporter;
         emit FeeReporterSet(newFeeReporter);
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert ZeroAddress();
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 
     function fund(address token, uint256 amount) external {

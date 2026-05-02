@@ -35,6 +35,7 @@ contract EscrowVault is IAegisEscrowVault {
 
     event HookSet(address indexed hook);
     event AuditorSet(address indexed auditor);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event ProtectedSwapEscrowed(
         bytes32 indexed tradeId,
         address indexed user,
@@ -95,6 +96,12 @@ contract EscrowVault is IAegisEscrowVault {
         if (newAuditor == address(0)) revert ZeroAddress();
         auditor = newAuditor;
         emit AuditorSet(newAuditor);
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert ZeroAddress();
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 
     function recordEscrow(EscrowInput calldata escrowInput) external onlyHook {

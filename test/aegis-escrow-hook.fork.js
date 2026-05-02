@@ -69,13 +69,13 @@ function swapParams(zeroForOne, amountIn) {
   };
 }
 
-function protectedRequest(key, tradeId, userAmount, settlementRecipient, expectedOutput = 0n) {
+function protectedRequest(key, zeroForOne, tradeId, userAmount, settlementRecipient, expectedOutput = 0n) {
   return {
     key,
-    zeroForOne: true,
+    zeroForOne,
     amountIn: userAmount,
     expectedOutput,
-    sqrtPriceLimitX96: MIN_PRICE_LIMIT,
+    sqrtPriceLimitX96: zeroForOne ? MIN_PRICE_LIMIT : MAX_PRICE_LIMIT,
     tradeId,
     settlementRecipient,
   };
@@ -84,14 +84,15 @@ function protectedRequest(key, tradeId, userAmount, settlementRecipient, expecte
 async function deployFixture() {
   const [owner, auditor, liquidityProvider, user, recipient, attacker, insurer] = await ethers.getSigners();
 
-  const tokenA = await ethers.deployContract("MockERC20", ["Aegis Token A", "AGSA", 18]);
-  const tokenB = await ethers.deployContract("MockERC20", ["Aegis Token B", "AGSB", 18]);
-  await tokenA.waitForDeployment();
-  await tokenB.waitForDeployment();
+  const usdt = await ethers.deployContract("MockERC20", ["Mock USDT", "USDT", 18]);
+  const aegis = await ethers.deployContract("MockERC20", ["Mock AEGIS", "AEGIS", 18]);
+  await usdt.waitForDeployment();
+  await aegis.waitForDeployment();
 
-  const [token0, token1] = sortTokens(tokenA, tokenB);
-  const inputToken = token0;
-  const outputToken = token1;
+  const [token0, token1] = sortTokens(usdt, aegis);
+  const inputToken = usdt;
+  const outputToken = aegis;
+  const zeroForOne = token0.target === usdt.target;
 
   const insurancePool = await ethers.deployContract("InsurancePool", [owner.address]);
   await insurancePool.waitForDeployment();
@@ -180,8 +181,11 @@ async function deployFixture() {
     insurer,
     token0,
     token1,
+    usdt,
+    aegis,
     inputToken,
     outputToken,
+    zeroForOne,
     insurancePool,
     vault,
     hook,
@@ -198,7 +202,7 @@ async function executeProtectedSwap(fixture, tradeId, amountIn, expectedOutput =
   await fixture.adapter
     .connect(fixture.user)
     .protectedExactInputSingle(
-      protectedRequest(fixture.key, tradeId, amountIn, fixture.recipient.address, expectedOutput),
+      protectedRequest(fixture.key, fixture.zeroForOne, tradeId, amountIn, fixture.recipient.address, expectedOutput),
       { gasLimit: 4_000_000 },
     );
 
@@ -250,7 +254,7 @@ describe("AEGIS402 insured escrow Uniswap v4 hook on Sepolia fork", function () 
 
     await fixture.poolSwapTest
       .connect(fixture.attacker)
-      .swap(fixture.key, swapParams(true, attackAmount), { takeClaims: false, settleUsingBurn: false }, "0x", {
+      .swap(fixture.key, swapParams(fixture.zeroForOne, attackAmount), { takeClaims: false, settleUsingBurn: false }, "0x", {
         gasLimit: 4_000_000,
       });
 
@@ -262,7 +266,7 @@ describe("AEGIS402 insured escrow Uniswap v4 hook on Sepolia fork", function () 
       .connect(fixture.attacker)
       .swap(
         fixture.key,
-        swapParams(false, attackerOutputBalance),
+        swapParams(!fixture.zeroForOne, attackerOutputBalance),
         { takeClaims: false, settleUsingBurn: false },
         "0x",
         { gasLimit: 4_000_000 },
@@ -321,7 +325,7 @@ describe("AEGIS402 insured escrow Uniswap v4 hook on Sepolia fork", function () 
 
     await fixture.poolSwapTest
       .connect(fixture.user)
-      .swap(fixture.key, swapParams(true, amountIn), { takeClaims: false, settleUsingBurn: false }, "0x", {
+      .swap(fixture.key, swapParams(fixture.zeroForOne, amountIn), { takeClaims: false, settleUsingBurn: false }, "0x", {
         gasLimit: 4_000_000,
       });
 

@@ -6,9 +6,12 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
+    "deploy:sepolia": "hardhat run scripts/deploy/sepolia-demo.js --network sepolia",
     "test:fork": "hardhat test test/aegis-escrow-hook.fork.js --network hardhat",
     "e2e:normal": "hardhat run scripts/e2e/normal.js --network hardhat",
     "e2e:sandwich": "hardhat run scripts/e2e/sandwich.js --network hardhat",
+    "e2e:deployed:fork": "hardhat run scripts/e2e/deployed-fork.js --network hardhat",
+    "e2e:sepolia": "hardhat run scripts/e2e/live-sepolia.js --network sepolia",
     "e2e": "npm run e2e:normal && npm run e2e:sandwich"
   },
   "devDependencies": {

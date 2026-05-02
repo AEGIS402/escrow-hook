@@ -12,7 +12,7 @@ import {SafeERC20} from "./libraries/SafeERC20.sol";
 contract AegisProtectedSwapAdapter {
     using SafeERC20 for address;
 
-    uint256 public constant PROTECTION_FEE_BPS = 35;
+    uint256 public constant PROTECTION_FEE_BPS = 50;
     uint256 public constant BPS_DENOMINATOR = 10_000;
 
     IPoolSwapTest public immutable poolSwapTest;

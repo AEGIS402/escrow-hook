@@ -1,0 +1,74 @@
+{
+  "mode": "sepolia-live",
+  "conclusion": "PASS: deployed USDT/AEGIS demo released clean settlement and paid insurance on the extreme loose-slippage sandwich case.",
+  "network": {
+    "chainId": "11155111",
+    "name": "sepolia-live"
+  },
+  "deployment": {
+    "aegisDemoDeployer": "0x95193B89c680ED1669Cc375205756d72dD45A88b",
+    "usdt": "0x325c88Ea79e350A35718d4e82940700C61FF0d43",
+    "aegis": "0xE756526ebCfEfdb224Bf129636e377486d8B11b6",
+    "insurancePool": "0x94e0fB9AcCfB6AeCDf35CF9e00d5bAfad5D4113d",
+    "vault": "0x4D54Bb8624Ad1267474121ECefb6E53c042F0748",
+    "hook": "0x24e277f3C03Fa7a5A37Be6aB170284328e738044",
+    "adapter": "0xC65A5a2Fea2Ef73A93aFFB940d4280664fB664B8"
+  },
+  "generatedActors": {
+    "auditor": "0x2514Dc48477596401Dd42d0d7e32FF7196F35D35",
+    "user": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
+    "attacker": "0x21096Ec5e85d2Bd2796D7C8280812AA0D922a601",
+    "walletFundEth": "0.05"
+  },
+  "normalCase": {
+    "tradeId": "0x1a0e2b27aef33e8076c338c1ad62bc54799b5b3ff16b38730b1f32667493e5c4",
+    "inputToken": "USDT",
+    "outputToken": "AEGIS",
+    "amountIn": "100.0",
+    "expectedOutput": "99.0",
+    "protectionFee": "0.5",
+    "pendingEscrow": {
+      "state": "1",
+      "user": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
+      "inputToken": "0x325c88Ea79e350A35718d4e82940700C61FF0d43",
+      "inputAmount": "100.0",
+      "outputToken": "0xE756526ebCfEfdb224Bf129636e377486d8B11b6",
+      "outputAmount": "99.469130600316193542",
+      "settlementRecipient": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
+      "expectedOutput": "99.0"
+    },
+    "finalEscrowState": "2",
+    "userAegisBeforeRelease": "0.0",
+    "userAegisAfterRelease": "99.469130600316193542"
+  },
+  "sandwichCase": {
+    "tradeId": "0x89844ad3aba3f620267de519343206a78d75fc2f431f5fc85267d673a6d7b3b6",
+    "victimSlippageModel": "max-loose price limit",
+    "victimSqrtPriceLimitX96": "4295128740",
+    "attackerFrontRunUsdt": "500000.0",
+    "attackerBackRunAegis": "426536.311279936476934158",
+    "baselineCleanOutputAegis": "99.469130600316193542",
+    "attackedVictimOutputAegis": "73.162028688223284653",
+    "outputShortfallVsCleanCaseAegis": "26.307101912092908889",
+    "pendingEscrow": {
+      "state": "1",
+      "user": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
+      "inputToken": "0x325c88Ea79e350A35718d4e82940700C61FF0d43",
+      "inputAmount": "100.0",
+      "outputToken": "0xE756526ebCfEfdb224Bf129636e377486d8B11b6",
+      "outputAmount": "73.162028688223284653",
+      "settlementRecipient": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
+      "expectedOutput": "0.0"
+    },
+    "finalEscrowState": "3",
+    "userUsdtBeforeClaim": "19799.0",
+    "userUsdtAfterClaim": "19899.0",
+    "userAegisAfterClaim": "99.469130600316193542",
+    "insuranceUsdtBeforeClaim": "999902.0",
+    "insuranceUsdtAfterClaim": "999802.0",
+    "insuranceAegisBeforeClaim": "1000044.391005624176152335",
+    "insuranceAegisAfterClaim": "1000117.553034312399436988",
+    "vaultAegisBeforeClaim": "73.162028688223284653",
+    "vaultAegisAfterClaim": "0.0"
+  }
+}

@@ -64,13 +64,13 @@ function swapParams(zeroForOne, amountIn) {
   };
 }
 
-function protectedRequest(key, tradeId, amountIn, settlementRecipient, expectedOutput = 0n) {
+function protectedRequest(key, zeroForOne, tradeId, amountIn, settlementRecipient, expectedOutput = 0n) {
   return {
     key,
-    zeroForOne: true,
+    zeroForOne,
     amountIn,
     expectedOutput,
-    sqrtPriceLimitX96: MIN_PRICE_LIMIT,
+    sqrtPriceLimitX96: zeroForOne ? MIN_PRICE_LIMIT : MAX_PRICE_LIMIT,
     tradeId,
     settlementRecipient,
   };
@@ -98,14 +98,15 @@ async function deployE2EFixture() {
   const networkInfo = await ethers.provider.getNetwork();
   assertE2E(network.name === "hardhat", "run this script with --network hardhat so Sepolia is forked locally");
 
-  const tokenA = await ethers.deployContract("MockERC20", ["Aegis Token A", "AGSA", 18]);
-  const tokenB = await ethers.deployContract("MockERC20", ["Aegis Token B", "AGSB", 18]);
-  await tokenA.waitForDeployment();
-  await tokenB.waitForDeployment();
+  const usdt = await ethers.deployContract("MockERC20", ["Mock USDT", "USDT", 18]);
+  const aegis = await ethers.deployContract("MockERC20", ["Mock AEGIS", "AEGIS", 18]);
+  await usdt.waitForDeployment();
+  await aegis.waitForDeployment();
 
-  const [token0, token1] = sortTokens(tokenA, tokenB);
-  const inputToken = token0;
-  const outputToken = token1;
+  const [token0, token1] = sortTokens(usdt, aegis);
+  const inputToken = usdt;
+  const outputToken = aegis;
+  const zeroForOne = token0.target === usdt.target;
 
   const insurancePool = await ethers.deployContract("InsurancePool", [owner.address]);
   await insurancePool.waitForDeployment();
@@ -153,7 +154,7 @@ async function deployE2EFixture() {
   const huge = ethers.parseEther("10000000");
   const reserve = ethers.parseEther("100000");
   const userBalance = ethers.parseEther("10000");
-  const attackerBalance = ethers.parseEther("100000");
+  const attackerBalance = ethers.parseEther("1000000");
 
   for (const token of [token0, token1]) {
     await token.mint(liquidityProvider.address, huge);
@@ -195,8 +196,11 @@ async function deployE2EFixture() {
     insurer,
     token0,
     token1,
+    usdt,
+    aegis,
     inputToken,
     outputToken,
+    zeroForOne,
     insurancePool,
     vault,
     hook,
@@ -214,7 +218,7 @@ async function executeProtectedSwap(fixture, tradeId, amountIn, expectedOutput =
   await fixture.adapter
     .connect(fixture.user)
     .protectedExactInputSingle(
-      protectedRequest(fixture.key, tradeId, amountIn, fixture.recipient.address, expectedOutput),
+      protectedRequest(fixture.key, fixture.zeroForOne, tradeId, amountIn, fixture.recipient.address, expectedOutput),
       { gasLimit: 4_000_000 },
     );
 
@@ -227,6 +231,8 @@ function printScenarioResult(title, result) {
 }
 
 module.exports = {
+  MAX_PRICE_LIMIT,
+  MIN_PRICE_LIMIT,
   POOL_MANAGER,
   POOL_SWAP_TEST,
   POOL_MODIFY_LIQUIDITY_TEST,

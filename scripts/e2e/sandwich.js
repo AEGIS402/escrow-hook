@@ -3,6 +3,8 @@ const {
   assertE2E,
   deployE2EFixture,
   executeProtectedSwap,
+  MAX_PRICE_LIMIT,
+  MIN_PRICE_LIMIT,
   printScenarioResult,
   printableEscrow,
   swapParams,
@@ -12,7 +14,7 @@ const {
 async function main() {
   const fixture = await deployE2EFixture();
   const amountIn = ethers.parseEther("100");
-  const attackAmount = ethers.parseEther("10000");
+  const attackAmount = ethers.parseEther(process.env.ATTACK_AMOUNT || "500000");
   const reason = ethers.encodeBytes32String("SANDWICH");
 
   const baselineSnapshot = await network.provider.send("evm_snapshot");
@@ -22,7 +24,7 @@ async function main() {
 
   await fixture.poolSwapTest
     .connect(fixture.attacker)
-    .swap(fixture.key, swapParams(true, attackAmount), { takeClaims: false, settleUsingBurn: false }, "0x", {
+    .swap(fixture.key, swapParams(fixture.zeroForOne, attackAmount), { takeClaims: false, settleUsingBurn: false }, "0x", {
       gasLimit: 4_000_000,
     });
 
@@ -34,7 +36,7 @@ async function main() {
     .connect(fixture.attacker)
     .swap(
       fixture.key,
-      swapParams(false, attackerOutputBalance),
+      swapParams(!fixture.zeroForOne, attackerOutputBalance),
       { takeClaims: false, settleUsingBurn: false },
       "0x",
       { gasLimit: 4_000_000 },
@@ -87,6 +89,8 @@ async function main() {
       inputToken: fixture.inputToken.target,
       outputToken: fixture.outputToken.target,
       victimAmountIn: tokenAmount(amountIn),
+      victimSlippageModel: "max-loose price limit",
+      victimSqrtPriceLimitX96: (fixture.zeroForOne ? MIN_PRICE_LIMIT : MAX_PRICE_LIMIT).toString(),
       attackerFrontRunAmountIn: tokenAmount(attackAmount),
       attackerBackRunAmountIn: tokenAmount(attackerOutputBalance),
       auditReason: "SANDWICH",

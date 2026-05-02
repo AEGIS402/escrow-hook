@@ -37,7 +37,7 @@ The MVP uses the official Uniswap v4 contracts on a Sepolia fork:
 The protected flow is:
 
 1. The user submits an exact-input protected swap through `AegisProtectedSwapAdapter`.
-2. The adapter collects the input amount plus a 35 bps protection fee.
+2. The adapter collects the input amount plus a 50 bps protection fee.
 3. The protection fee is sent to `InsurancePool`.
 4. The swap is executed through the official Sepolia `PoolSwapTest`.
 5. `AegisEscrowHook` runs in `afterSwap`.
