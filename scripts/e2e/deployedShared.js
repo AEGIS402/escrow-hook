@@ -33,6 +33,10 @@ async function waitForTx(txPromise) {
   return tx.wait();
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function signerAddress(signer) {
   return signer.address || signer.getAddress();
 }
@@ -61,6 +65,19 @@ async function executeAuditDecisionOrLegacy(ctx, auditAgent, decision, legacyCal
   }
 
   return waitForTx(legacyCall());
+}
+
+async function waitForEscrowState(ctx, tradeId, expectedState, label) {
+  let lastEscrow = null;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    lastEscrow = await ctx.vault.escrows(tradeId);
+    if (BigInt(lastEscrow.state) === expectedState) return lastEscrow;
+    await sleep(2_500);
+  }
+
+  throw new Error(
+    `Timed out waiting for ${label} escrow ${tradeId} to reach state ${expectedState}; last state ${lastEscrow.state}`,
+  );
 }
 
 function loadDeployment() {
@@ -213,7 +230,7 @@ async function executeProtectedUsdtToAegis(ctx, user, tradeId, amountIn, settlem
     ),
   );
 
-  return ctx.vault.escrows(tradeId);
+  return waitForEscrowState(ctx, tradeId, 1n, "protected swap");
 }
 
 async function plainUsdtToAegisSwap(ctx, trader, amountIn) {
@@ -273,5 +290,6 @@ module.exports = {
   printableEscrow,
   saveResult,
   tokenAmount,
+  waitForEscrowState,
   waitForTx,
 };

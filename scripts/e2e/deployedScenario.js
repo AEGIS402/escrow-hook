@@ -15,6 +15,7 @@ const {
   printableEscrow,
   saveResult,
   tokenAmount,
+  waitForEscrowState,
   waitForTx,
 } = require("./deployedShared");
 
@@ -74,7 +75,7 @@ async function runDeployedScenario({ mode, resultFileName, owner }) {
     () => ctx.vault.connect(auditor).release(normalTradeId, { gasLimit: 500_000 }),
   );
 
-  const releasedEscrow = await ctx.vault.escrows(normalTradeId);
+  const releasedEscrow = await waitForEscrowState(ctx, normalTradeId, 2n, "normal release");
   const normalRecipientAfter = await ctx.aegis.balanceOf(user.address);
   assertE2E(BigInt(releasedEscrow.state) === 2n, "normal escrow must be Released");
   assertE2E(
@@ -116,7 +117,7 @@ async function runDeployedScenario({ mode, resultFileName, owner }) {
       }),
   );
 
-  const paidEscrow = await ctx.vault.escrows(sandwichTradeId);
+  const paidEscrow = await waitForEscrowState(ctx, sandwichTradeId, 3n, "sandwich claim");
   const userUsdtAfterClaim = await ctx.usdt.balanceOf(user.address);
   const userAegisAfterClaim = await ctx.aegis.balanceOf(user.address);
   const insuranceUsdtAfterClaim = await ctx.usdt.balanceOf(deployment.contracts.insurancePool);

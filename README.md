@@ -103,22 +103,30 @@ Fresh deployments created by the current deploy script include the audit-respons
 
 ### Deployed Addresses
 
-The addresses below are the previously recorded Sepolia demo deployment. They remain valid for the legacy live-demo scripts. Redeploy with `npm run deploy:sepolia` to get fresh bytecode that includes the new `executeAuditDecision` standard entrypoint.
+The addresses below are the current Sepolia demo deployment with the audit-responsive escrow standard enabled.
 
 | Contract | Sepolia address |
 | --- | --- |
-| AegisDemoDeployer | `0x95193B89c680ED1669Cc375205756d72dD45A88b` |
-| Mock USDT | `0x325c88Ea79e350A35718d4e82940700C61FF0d43` |
-| Mock AEGIS | `0xE756526ebCfEfdb224Bf129636e377486d8B11b6` |
-| InsurancePool | `0x94e0fB9AcCfB6AeCDf35CF9e00d5bAfad5D4113d` |
-| EscrowVault | `0x4D54Bb8624Ad1267474121ECefb6E53c042F0748` |
-| AegisEscrowHook | `0x24e277f3C03Fa7a5A37Be6aB170284328e738044` |
-| AegisProtectedSwapAdapter | `0xC65A5a2Fea2Ef73A93aFFB940d4280664fB664B8` |
+| AegisDemoDeployer | `0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2` |
+| Mock USDT | `0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f` |
+| Mock AEGIS | `0x788AAa4E8da43480d24FB900c6685274441DBBA0` |
+| InsurancePool | `0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341` |
+| EscrowVault | `0x014A0A4239bE3450bab6A59bba32BecC9e372bc3` |
+| AegisEscrowHook | `0x2d8b972f069D448040C4B8C3FfdD491fF25E8044` |
+| AegisProtectedSwapAdapter | `0x78159564738C31B0D31982256bBbE81bEE9aBc09` |
 
-Deployment transaction:
+Deployment transactions:
 
 ```text
-deployDemo: 0x94cfc6bc2dccb482028e4c2bf78cbf4314e74e36efdba5f178ec461ea5e2db48
+AegisDemoDeployer: 0x3b2667dd15324547c2811c530636722d1f530f30a475e4b456b63e0d80d0e5c6
+deployDemo: 0x5611b14dc0550b7d9600fdb011a5e77c63f9554750908842b887667ee605685b
+```
+
+Deployment blocks:
+
+```text
+AegisDemoDeployer: 10778501
+deployDemo: 10778506
 ```
 
 Initial insurance reserves minted directly into `InsurancePool`:
@@ -161,7 +169,7 @@ npm run e2e
 Run E2E against the deployed Sepolia addresses on a local Hardhat fork:
 
 ```bash
-FORK_BLOCK_NUMBER=10778295 npm run e2e:deployed:fork
+FORK_BLOCK_NUMBER=10778506 npm run e2e:deployed:fork
 ```
 
 Run E2E on live Sepolia:
@@ -190,9 +198,9 @@ Generated actors:
 
 | Role | Address |
 | --- | --- |
-| Auditor | `0x1285AF84C5a67972Da53Ae5A126f4CF08081425b` |
-| User | `0xa12cbDDc555eC6E3290677E82c5442De330917EF` |
-| Attacker | `0xBB5DcD326bE5984240D0AdD1852757184F515fBE` |
+| Auditor | `0x85cF8af54eDa3A49aaFcf9f4f845E9dFB386efef` |
+| User | `0x7321f0bE5Ec09f9a83CF95d5E5d32f6dAA9f6570` |
+| Attacker | `0xAd26A9FEf273C836Fe6d76C0545f2128296A37a3` |
 
 Normal case:
 
@@ -200,9 +208,10 @@ Normal case:
 | --- | --- |
 | Input | `100.0 USDT` |
 | Protection fee | `0.5 USDT` |
-| Escrowed output | `99.373567686168735429 AEGIS` |
+| Audit action | `RELEASE` |
+| Escrowed output | `99.69006090092817746 AEGIS` |
 | Final state | `2` (`Released`) |
-| User AEGIS after release | `99.373567686168735429 AEGIS` |
+| User AEGIS after release | `99.69006090092817746 AEGIS` |
 
 Extreme sandwich case:
 
@@ -212,15 +221,16 @@ Extreme sandwich case:
 | Victim slippage model | max-loose price limit |
 | Victim sqrt price limit | `4295128740` |
 | Attacker front-run | `500000.0 USDT` |
-| Attacker back-run | `441877.41186647705326863 AEGIS` |
-| Clean-case output | `99.373567686168735429 AEGIS` |
-| Attacked victim output | `78.59481727368501012 AEGIS` |
-| Output shortfall | `20.778750412483725309 AEGIS` |
+| Attacker back-run | `332610.706184340546246963 AEGIS` |
+| Audit action | `BLOCK_AND_CLAIM` |
+| Clean-case output | `99.69006090092817746 AEGIS` |
+| Attacked victim output | `44.391005624176152335 AEGIS` |
+| Output shortfall | `55.299055276752025125 AEGIS` |
 | Final state | `3` (`ClaimPaid`) |
 | User USDT before claim | `19799.0 USDT` |
 | User USDT after claim | `19899.0 USDT` |
-| User AEGIS after claim | `99.373567686168735429 AEGIS` |
-| Insurance AEGIS after recovery | `1000196.147851586084447108 AEGIS` |
+| User AEGIS after claim | `99.69006090092817746 AEGIS` |
+| Insurance AEGIS after recovery | `1000044.391005624176152335 AEGIS` |
 | Vault AEGIS after claim | `0.0 AEGIS` |
 
 Conclusion:
@@ -237,13 +247,13 @@ Result file:
 deployments/sepolia-live-e2e.json
 ```
 
-Generated actors were funded with `0.05` Sepolia ETH each from the deployment key.
+Generated actors were funded with `0.005` Sepolia ETH each from the deployment key.
 
 | Role | Address |
 | --- | --- |
-| Auditor | `0x2514Dc48477596401Dd42d0d7e32FF7196F35D35` |
-| User | `0x956101cAc7B217AF87dacFd1aD04a210DaFB4186` |
-| Attacker | `0x21096Ec5e85d2Bd2796D7C8280812AA0D922a601` |
+| Auditor | `0x94fD94a8BD99A20D5A0f3D65BB99502E062Dda38` |
+| User | `0xA92B64722af987B97481be3b2Ef6bB79D8ccbC22` |
+| Attacker | `0x252Df5860a4583647904A59bA67A9dd9C46EB90d` |
 
 Normal case:
 
@@ -251,9 +261,10 @@ Normal case:
 | --- | --- |
 | Input | `100.0 USDT` |
 | Protection fee | `0.5 USDT` |
-| Escrowed output | `99.469130600316193542 AEGIS` |
+| Audit action | `RELEASE` |
+| Escrowed output | `99.541251236045274067 AEGIS` |
 | Final state | `2` (`Released`) |
-| User AEGIS after release | `99.469130600316193542 AEGIS` |
+| User AEGIS after release | `99.541251236045274067 AEGIS` |
 
 Extreme sandwich case:
 
@@ -263,16 +274,17 @@ Extreme sandwich case:
 | Victim slippage model | max-loose price limit |
 | Victim sqrt price limit | `4295128740` |
 | Attacker front-run | `500000.0 USDT` |
-| Attacker back-run | `426536.311279936476934158 AEGIS` |
-| Clean-case output | `99.469130600316193542 AEGIS` |
-| Attacked victim output | `73.162028688223284653 AEGIS` |
-| Output shortfall | `26.307101912092908889 AEGIS` |
+| Attacker back-run | `426823.547013306836346846 AEGIS` |
+| Audit action | `BLOCK_AND_CLAIM` |
+| Clean-case output | `99.541251236045274067 AEGIS` |
+| Attacked victim output | `73.207519328954046387 AEGIS` |
+| Output shortfall | `26.33373190709122768 AEGIS` |
 | Final state | `3` (`ClaimPaid`) |
 | User USDT before claim | `19799.0 USDT` |
 | User USDT after claim | `19899.0 USDT` |
-| User AEGIS after claim | `99.469130600316193542 AEGIS` |
-| Insurance USDT after claim | `999802.0 USDT` |
-| Insurance AEGIS after recovery | `1000117.553034312399436988 AEGIS` |
+| User AEGIS after claim | `99.541251236045274067 AEGIS` |
+| Insurance USDT after claim | `999802.5 USDT` |
+| Insurance AEGIS after recovery | `1000137.074316917335233568 AEGIS` |
 | Vault AEGIS after claim | `0.0 AEGIS` |
 
 Conclusion:
@@ -284,5 +296,6 @@ PASS: deployed USDT/AEGIS demo released clean settlement and paid insurance on t
 ## Notes
 
 - The live pool was initialized once on Sepolia. Later E2E runs skip initialization and add more liquidity.
-- The first `AegisDemoDeployer` transaction succeeded, while the first oversized `deployDemo` attempt was rejected by the RPC before broadcast. The recorded `deployDemo` transaction above is the successful one-call deployment for the demo contracts.
+- The live E2E scripts use the standard `executeAuditDecision` entrypoint for both `RELEASE` and `BLOCK_AND_CLAIM`.
+- Public non-archive Sepolia RPCs may fail local fork tests at historical blocks. The recorded fork result used `FORK_BLOCK_NUMBER=10778506` with an archive-capable Sepolia RPC.
 - A production system should replace the single auditor EOA with multisig, role-based access, or another governed attestation path.

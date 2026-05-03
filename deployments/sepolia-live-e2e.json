@@ -6,22 +6,33 @@
     "name": "sepolia-live"
   },
   "deployment": {
-    "aegisDemoDeployer": "0x95193B89c680ED1669Cc375205756d72dD45A88b",
-    "usdt": "0x325c88Ea79e350A35718d4e82940700C61FF0d43",
-    "aegis": "0xE756526ebCfEfdb224Bf129636e377486d8B11b6",
-    "insurancePool": "0x94e0fB9AcCfB6AeCDf35CF9e00d5bAfad5D4113d",
-    "vault": "0x4D54Bb8624Ad1267474121ECefb6E53c042F0748",
-    "hook": "0x24e277f3C03Fa7a5A37Be6aB170284328e738044",
-    "adapter": "0xC65A5a2Fea2Ef73A93aFFB940d4280664fB664B8"
+    "aegisDemoDeployer": "0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2",
+    "usdt": "0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f",
+    "aegis": "0x788AAa4E8da43480d24FB900c6685274441DBBA0",
+    "insurancePool": "0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341",
+    "vault": "0x014A0A4239bE3450bab6A59bba32BecC9e372bc3",
+    "hook": "0x2d8b972f069D448040C4B8C3FfdD491fF25E8044",
+    "adapter": "0x78159564738C31B0D31982256bBbE81bEE9aBc09"
+  },
+  "auditEscrowStandard": {
+    "version": "1.0.0",
+    "entrypoint": "executeAuditDecision((bytes32,uint8,bytes32,bytes32,bytes))",
+    "actions": [
+      "RELEASE",
+      "BLOCK_AND_CLAIM",
+      "RECOVER_TO_RESERVE",
+      "CUSTOM"
+    ]
   },
   "generatedActors": {
-    "auditor": "0x2514Dc48477596401Dd42d0d7e32FF7196F35D35",
-    "user": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
-    "attacker": "0x21096Ec5e85d2Bd2796D7C8280812AA0D922a601",
-    "walletFundEth": "0.05"
+    "auditor": "0x94fD94a8BD99A20D5A0f3D65BB99502E062Dda38",
+    "user": "0xA92B64722af987B97481be3b2Ef6bB79D8ccbC22",
+    "attacker": "0x252Df5860a4583647904A59bA67A9dd9C46EB90d",
+    "walletFundEth": "0.005"
   },
   "normalCase": {
-    "tradeId": "0x1a0e2b27aef33e8076c338c1ad62bc54799b5b3ff16b38730b1f32667493e5c4",
+    "auditAction": "RELEASE",
+    "tradeId": "0x4369069a52e2464213bb728388d0fbd5282c649da76d66633373974be96c1b90",
     "inputToken": "USDT",
     "outputToken": "AEGIS",
     "amountIn": "100.0",
@@ -29,46 +40,47 @@
     "protectionFee": "0.5",
     "pendingEscrow": {
       "state": "1",
-      "user": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
-      "inputToken": "0x325c88Ea79e350A35718d4e82940700C61FF0d43",
+      "user": "0xA92B64722af987B97481be3b2Ef6bB79D8ccbC22",
+      "inputToken": "0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f",
       "inputAmount": "100.0",
-      "outputToken": "0xE756526ebCfEfdb224Bf129636e377486d8B11b6",
-      "outputAmount": "99.469130600316193542",
-      "settlementRecipient": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
+      "outputToken": "0x788AAa4E8da43480d24FB900c6685274441DBBA0",
+      "outputAmount": "99.541251236045274067",
+      "settlementRecipient": "0xA92B64722af987B97481be3b2Ef6bB79D8ccbC22",
       "expectedOutput": "99.0"
     },
     "finalEscrowState": "2",
     "userAegisBeforeRelease": "0.0",
-    "userAegisAfterRelease": "99.469130600316193542"
+    "userAegisAfterRelease": "99.541251236045274067"
   },
   "sandwichCase": {
-    "tradeId": "0x89844ad3aba3f620267de519343206a78d75fc2f431f5fc85267d673a6d7b3b6",
+    "auditAction": "BLOCK_AND_CLAIM",
+    "tradeId": "0xb65022f3c0f201b78cc7af4f9290f80d97677096e5b98c39bd634f740e5d877d",
     "victimSlippageModel": "max-loose price limit",
     "victimSqrtPriceLimitX96": "4295128740",
     "attackerFrontRunUsdt": "500000.0",
-    "attackerBackRunAegis": "426536.311279936476934158",
-    "baselineCleanOutputAegis": "99.469130600316193542",
-    "attackedVictimOutputAegis": "73.162028688223284653",
-    "outputShortfallVsCleanCaseAegis": "26.307101912092908889",
+    "attackerBackRunAegis": "426823.547013306836346846",
+    "baselineCleanOutputAegis": "99.541251236045274067",
+    "attackedVictimOutputAegis": "73.207519328954046387",
+    "outputShortfallVsCleanCaseAegis": "26.33373190709122768",
     "pendingEscrow": {
       "state": "1",
-      "user": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
-      "inputToken": "0x325c88Ea79e350A35718d4e82940700C61FF0d43",
+      "user": "0xA92B64722af987B97481be3b2Ef6bB79D8ccbC22",
+      "inputToken": "0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f",
       "inputAmount": "100.0",
-      "outputToken": "0xE756526ebCfEfdb224Bf129636e377486d8B11b6",
-      "outputAmount": "73.162028688223284653",
-      "settlementRecipient": "0x956101cAc7B217AF87dacFd1aD04a210DaFB4186",
+      "outputToken": "0x788AAa4E8da43480d24FB900c6685274441DBBA0",
+      "outputAmount": "73.207519328954046387",
+      "settlementRecipient": "0xA92B64722af987B97481be3b2Ef6bB79D8ccbC22",
       "expectedOutput": "0.0"
     },
     "finalEscrowState": "3",
     "userUsdtBeforeClaim": "19799.0",
     "userUsdtAfterClaim": "19899.0",
-    "userAegisAfterClaim": "99.469130600316193542",
-    "insuranceUsdtBeforeClaim": "999902.0",
-    "insuranceUsdtAfterClaim": "999802.0",
-    "insuranceAegisBeforeClaim": "1000044.391005624176152335",
-    "insuranceAegisAfterClaim": "1000117.553034312399436988",
-    "vaultAegisBeforeClaim": "73.162028688223284653",
+    "userAegisAfterClaim": "99.541251236045274067",
+    "insuranceUsdtBeforeClaim": "999902.5",
+    "insuranceUsdtAfterClaim": "999802.5",
+    "insuranceAegisBeforeClaim": "1000063.866797588381187181",
+    "insuranceAegisAfterClaim": "1000137.074316917335233568",
+    "vaultAegisBeforeClaim": "73.207519328954046387",
     "vaultAegisAfterClaim": "0.0"
   }
 }

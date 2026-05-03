@@ -1,34 +1,48 @@
 {
   "network": "sepolia",
   "chainId": "11155111",
-  "deployedAt": "2026-05-02T23:22:15.382Z",
+  "deployedAt": "2026-05-03T00:31:37.667Z",
   "deployer": "0x2f149CaA0e931e13f6F32bd3E46eFc6e96bcC36A",
   "officialUniswapV4": {
     "poolManager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
     "poolSwapTest": "0x9b6b46e2c869aa39918db7f52f5557fe577b6eee",
     "poolModifyLiquidityTest": "0x0c478023803a644c94c4ce1c1e7b9a087e411b0a"
   },
+  "auditEscrowStandard": {
+    "version": "1.0.0",
+    "entrypoint": "executeAuditDecision((bytes32,uint8,bytes32,bytes32,bytes))",
+    "actions": [
+      "RELEASE",
+      "BLOCK_AND_CLAIM",
+      "RECOVER_TO_RESERVE",
+      "CUSTOM"
+    ]
+  },
   "transactions": {
-    "aegisDemoDeployer": null,
-    "deployDemo": "0x94cfc6bc2dccb482028e4c2bf78cbf4314e74e36efdba5f178ec461ea5e2db48"
+    "aegisDemoDeployer": "0x3b2667dd15324547c2811c530636722d1f530f30a475e4b456b63e0d80d0e5c6",
+    "deployDemo": "0x5611b14dc0550b7d9600fdb011a5e77c63f9554750908842b887667ee605685b"
+  },
+  "blocks": {
+    "aegisDemoDeployer": 10778501,
+    "deployDemo": 10778506
   },
   "contracts": {
-    "aegisDemoDeployer": "0x95193B89c680ED1669Cc375205756d72dD45A88b",
-    "usdt": "0x325c88Ea79e350A35718d4e82940700C61FF0d43",
-    "aegis": "0xE756526ebCfEfdb224Bf129636e377486d8B11b6",
-    "insurancePool": "0x94e0fB9AcCfB6AeCDf35CF9e00d5bAfad5D4113d",
-    "vault": "0x4D54Bb8624Ad1267474121ECefb6E53c042F0748",
-    "hook": "0x24e277f3C03Fa7a5A37Be6aB170284328e738044",
-    "adapter": "0xC65A5a2Fea2Ef73A93aFFB940d4280664fB664B8"
+    "aegisDemoDeployer": "0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2",
+    "usdt": "0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f",
+    "aegis": "0x788AAa4E8da43480d24FB900c6685274441DBBA0",
+    "insurancePool": "0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341",
+    "vault": "0x014A0A4239bE3450bab6A59bba32BecC9e372bc3",
+    "hook": "0x2d8b972f069D448040C4B8C3FfdD491fF25E8044",
+    "adapter": "0x78159564738C31B0D31982256bBbE81bEE9aBc09"
   },
   "salts": {
-    "usdtSalt": "0x8ff90ba890efa7a6ab62c3adeae11a81662b2fc54e32e9b3a10912040d32dc81",
-    "aegisSalt": "0xda7d2b7cc446d51c643ec2e7376773c7c1abe14448514129489492318f088f99",
-    "insurancePoolSalt": "0x25eb3ed3edf0b9cee1d77848a3ff2eea4db27259cb02600d64f9831c617ae565",
-    "vaultSalt": "0x133c85a34029a04c879d70e3302cf88d3938af821291868dfaa3e6219f70feab",
-    "hookSalt": "0x6a6396ab5e5ca4523a5f03e0204fb23a84671314d591cba5553e718e40e3fcc5",
-    "hookSaltIndex": "12443",
-    "adapterSalt": "0x31e3ebb9d0f144db2ae75ef70228f8aa8f398244f5cc3b38df3aca69148767ae"
+    "usdtSalt": "0x8d340dd22336c0017745af450df01e1f5c3e9eefa3fa0cf391f8e19d497f271d",
+    "aegisSalt": "0x05d0447cc62b4850411083182378521e99d363357468c755a5c880c835cdddbb",
+    "insurancePoolSalt": "0x800c9d3397f80867abaace6ece27c11a71553aabb170eae6ce50b3fe8faba80c",
+    "vaultSalt": "0xbebca28453dbffe514f0bd9d2bf45afb60aa070ddefbb594d31e01a7741a04fd",
+    "hookSalt": "0xa63d939419c36e0ed451af6cbfcdae024eb3ceab1d5c35aa4911ee5889b99fb9",
+    "hookSaltIndex": "17990",
+    "adapterSalt": "0x679bae47645c93ee635fc5e15e7d9f55f04029788f77b76d87b91f8fa58a07a3"
   },
   "initialConfig": {
     "finalOwner": "0x2f149CaA0e931e13f6F32bd3E46eFc6e96bcC36A",
