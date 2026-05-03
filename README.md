@@ -276,6 +276,15 @@ Normal case:
 | Final state | `2` (`Released`) |
 | User AEGIS after release | `99.541251236045274067 AEGIS` |
 
+Normal case transaction hashes:
+
+| Step | Sepolia transaction |
+| --- | --- |
+| User mints USDT | [`0x22125e7822b4f727dedb166b3463a416345c9aae2914de38b4ab1ac521e96dc4`](https://sepolia.etherscan.io/tx/0x22125e7822b4f727dedb166b3463a416345c9aae2914de38b4ab1ac521e96dc4) |
+| User approves adapter | [`0x537aaf550082f8820b2e41250b7e6af9c843c54aa9f733dcccfac63f3bb7a191`](https://sepolia.etherscan.io/tx/0x537aaf550082f8820b2e41250b7e6af9c843c54aa9f733dcccfac63f3bb7a191) |
+| Protected swap escrowed | [`0x9c55902631bed51d5a37e205a0eb1fd86eb84be0f7293c6aaf6161b86869e946`](https://sepolia.etherscan.io/tx/0x9c55902631bed51d5a37e205a0eb1fd86eb84be0f7293c6aaf6161b86869e946) |
+| Audit `RELEASE` | [`0x7e10d76a184506605b964981df9556b141acefd6e7610681665a564231dfc3ca`](https://sepolia.etherscan.io/tx/0x7e10d76a184506605b964981df9556b141acefd6e7610681665a564231dfc3ca) |
+
 Extreme sandwich case:
 
 | Field | Value |
@@ -296,6 +305,20 @@ Extreme sandwich case:
 | Insurance USDT after claim | `999802.5 USDT` |
 | Insurance AEGIS after recovery | `1000137.074316917335233568 AEGIS` |
 | Vault AEGIS after claim | `0.0 AEGIS` |
+
+Extreme sandwich case transaction hashes:
+
+| Step | Sepolia transaction |
+| --- | --- |
+| Attacker mints USDT | [`0x4202a447c44908cc910bb8bcd54dccd81e672947d8db5e9e5b2d4083c49205ca`](https://sepolia.etherscan.io/tx/0x4202a447c44908cc910bb8bcd54dccd81e672947d8db5e9e5b2d4083c49205ca) |
+| Attacker approves USDT | [`0x98448d450e0646884adb49eb7111d8adaf9adfc88e280559e37cc96b1f400017`](https://sepolia.etherscan.io/tx/0x98448d450e0646884adb49eb7111d8adaf9adfc88e280559e37cc96b1f400017) |
+| Attacker front-run swap | [`0xc4cc487ce64adfb47fc7b8453844617f033ac36e59acf3b006a4d50f999f7899`](https://sepolia.etherscan.io/tx/0xc4cc487ce64adfb47fc7b8453844617f033ac36e59acf3b006a4d50f999f7899) |
+| Victim mints USDT | [`0x09b58a185a60012b0c80bd57183ba383bd1fa59468653823489446ee8dea2dd7`](https://sepolia.etherscan.io/tx/0x09b58a185a60012b0c80bd57183ba383bd1fa59468653823489446ee8dea2dd7) |
+| Victim approves adapter | [`0x2914ed6a9cf5c146f57f10a5fd3a8e00064f6e73a35e43a154650be1a61b00f0`](https://sepolia.etherscan.io/tx/0x2914ed6a9cf5c146f57f10a5fd3a8e00064f6e73a35e43a154650be1a61b00f0) |
+| Victim protected swap escrowed | [`0xbb146dc17fcce5294bb67fd3eebc57822ba157bb58e8b2c601006e5b3202c39e`](https://sepolia.etherscan.io/tx/0xbb146dc17fcce5294bb67fd3eebc57822ba157bb58e8b2c601006e5b3202c39e) |
+| Attacker approves AEGIS | [`0xbee6820d00373b3d1ae277d0a77e2ab0681599513c098a763f94f2af020542cd`](https://sepolia.etherscan.io/tx/0xbee6820d00373b3d1ae277d0a77e2ab0681599513c098a763f94f2af020542cd) |
+| Attacker back-run swap | [`0x31e822718969569c5ef8f9f6a80ff725e86f1363881e29186bc6fdf023f69beb`](https://sepolia.etherscan.io/tx/0x31e822718969569c5ef8f9f6a80ff725e86f1363881e29186bc6fdf023f69beb) |
+| Audit `BLOCK_AND_CLAIM` | [`0x7484f8b5481d03f9d285f3b0860beace6602e51be1fe1b18a280f7621b46c1cf`](https://sepolia.etherscan.io/tx/0x7484f8b5481d03f9d285f3b0860beace6602e51be1fe1b18a280f7621b46c1cf) |
 
 Conclusion:
 
