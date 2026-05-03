@@ -35,6 +35,15 @@
     "hook": "0x2d8b972f069D448040C4B8C3FfdD491fF25E8044",
     "adapter": "0x78159564738C31B0D31982256bBbE81bEE9aBc09"
   },
+  "etherscan": {
+    "aegisDemoDeployer": "https://sepolia.etherscan.io/address/0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2#code",
+    "usdt": "https://sepolia.etherscan.io/address/0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f#code",
+    "aegis": "https://sepolia.etherscan.io/address/0x788AAa4E8da43480d24FB900c6685274441DBBA0#code",
+    "insurancePool": "https://sepolia.etherscan.io/address/0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341#code",
+    "vault": "https://sepolia.etherscan.io/address/0x014A0A4239bE3450bab6A59bba32BecC9e372bc3#code",
+    "hook": "https://sepolia.etherscan.io/address/0x2d8b972f069D448040C4B8C3FfdD491fF25E8044#code",
+    "adapter": "https://sepolia.etherscan.io/address/0x78159564738C31B0D31982256bBbE81bEE9aBc09#code"
+  },
   "salts": {
     "usdtSalt": "0x8d340dd22336c0017745af450df01e1f5c3e9eefa3fa0cf391f8e19d497f271d",
     "aegisSalt": "0x05d0447cc62b4850411083182378521e99d363357468c755a5c880c835cdddbb",

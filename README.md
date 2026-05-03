@@ -105,15 +105,15 @@ Fresh deployments created by the current deploy script include the audit-respons
 
 The addresses below are the current Sepolia demo deployment with the audit-responsive escrow standard enabled.
 
-| Contract | Sepolia address |
-| --- | --- |
-| AegisDemoDeployer | `0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2` |
-| Mock USDT | `0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f` |
-| Mock AEGIS | `0x788AAa4E8da43480d24FB900c6685274441DBBA0` |
-| InsurancePool | `0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341` |
-| EscrowVault | `0x014A0A4239bE3450bab6A59bba32BecC9e372bc3` |
-| AegisEscrowHook | `0x2d8b972f069D448040C4B8C3FfdD491fF25E8044` |
-| AegisProtectedSwapAdapter | `0x78159564738C31B0D31982256bBbE81bEE9aBc09` |
+| Contract | Sepolia address | Verified source |
+| --- | --- | --- |
+| AegisDemoDeployer | `0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2` | [Etherscan code](https://sepolia.etherscan.io/address/0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2#code) |
+| Mock USDT | `0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f` | [Etherscan code](https://sepolia.etherscan.io/address/0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f#code) |
+| Mock AEGIS | `0x788AAa4E8da43480d24FB900c6685274441DBBA0` | [Etherscan code](https://sepolia.etherscan.io/address/0x788AAa4E8da43480d24FB900c6685274441DBBA0#code) |
+| InsurancePool | `0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341` | [Etherscan code](https://sepolia.etherscan.io/address/0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341#code) |
+| EscrowVault | `0x014A0A4239bE3450bab6A59bba32BecC9e372bc3` | [Etherscan code](https://sepolia.etherscan.io/address/0x014A0A4239bE3450bab6A59bba32BecC9e372bc3#code) |
+| AegisEscrowHook | `0x2d8b972f069D448040C4B8C3FfdD491fF25E8044` | [Etherscan code](https://sepolia.etherscan.io/address/0x2d8b972f069D448040C4B8C3FfdD491fF25E8044#code) |
+| AegisProtectedSwapAdapter | `0x78159564738C31B0D31982256bBbE81bEE9aBc09` | [Etherscan code](https://sepolia.etherscan.io/address/0x78159564738C31B0D31982256bBbE81bEE9aBc09#code) |
 
 Deployment transactions:
 
@@ -129,17 +129,15 @@ AegisDemoDeployer: 10778501
 deployDemo: 10778506
 ```
 
-All current Sepolia demo contracts are verified on Etherscan:
+### Etherscan Verification
 
-| Contract | Etherscan |
-| --- | --- |
-| AegisDemoDeployer | `https://sepolia.etherscan.io/address/0xb87A1BDB10B79dA2a5dB9EeDb8949c247Fd55bA2#code` |
-| Mock USDT | `https://sepolia.etherscan.io/address/0xdEFf5dE317F4636498a58D7D7dd0bc9c178e816f#code` |
-| Mock AEGIS | `https://sepolia.etherscan.io/address/0x788AAa4E8da43480d24FB900c6685274441DBBA0#code` |
-| InsurancePool | `https://sepolia.etherscan.io/address/0xFEA84989fAF5ee2Ee0e6413A4F6b67e1d7d7F341#code` |
-| EscrowVault | `https://sepolia.etherscan.io/address/0x014A0A4239bE3450bab6A59bba32BecC9e372bc3#code` |
-| AegisEscrowHook | `https://sepolia.etherscan.io/address/0x2d8b972f069D448040C4B8C3FfdD491fF25E8044#code` |
-| AegisProtectedSwapAdapter | `https://sepolia.etherscan.io/address/0x78159564738C31B0D31982256bBbE81bEE9aBc09#code` |
+All current Sepolia demo contracts are verified on Etherscan. The verified source links are included in the deployment table above, and the same URLs are recorded in `deployments/sepolia-demo.json`.
+
+Verification was performed with:
+
+```bash
+npx hardhat verify --network sepolia <contract-address> <constructor-args>
+```
 
 Initial insurance reserves minted directly into `InsurancePool`:
 
