@@ -14,6 +14,8 @@ const HOOK_FLAGS = 0x44n;
 const ALL_HOOK_MASK = (1n << 14n) - 1n;
 const MAX_UINT256 = (1n << 256n) - 1n;
 const ZERO_BYTES32 = ethers.ZeroHash;
+const AUDIT_ACTION_RELEASE = 0;
+const AUDIT_ACTION_BLOCK_AND_CLAIM = 1;
 
 const poolManagerAbi = [
   "function initialize((address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) key,uint160 sqrtPriceX96) external returns (int24 tick)",
@@ -78,6 +80,16 @@ function protectedRequest(key, zeroForOne, tradeId, userAmount, settlementRecipi
     sqrtPriceLimitX96: zeroForOne ? MIN_PRICE_LIMIT : MAX_PRICE_LIMIT,
     tradeId,
     settlementRecipient,
+  };
+}
+
+function auditDecision(escrowId, action, reason = ZERO_BYTES32, evidenceHash = ZERO_BYTES32, actionData = "0x") {
+  return {
+    escrowId,
+    action,
+    reason,
+    evidenceHash,
+    actionData,
   };
 }
 
@@ -232,10 +244,15 @@ describe("AEGIS402 insured escrow Uniswap v4 hook on Sepolia fork", function () 
     expect(await fixture.outputToken.balanceOf(fixture.recipient.address)).to.equal(recipientOutputBefore);
     expect(await fixture.inputToken.balanceOf(fixture.insurancePool.target)).to.equal(poolInputBefore + fee);
 
-    await fixture.vault.connect(fixture.auditor).release(tradeId);
+    const cleanReason = ethers.encodeBytes32String("CLEAN");
+    const evidenceHash = ethers.id("normal-audit-evidence");
+    await fixture.vault
+      .connect(fixture.auditor)
+      .executeAuditDecision(auditDecision(tradeId, AUDIT_ACTION_RELEASE, cleanReason, evidenceHash));
 
     const released = await fixture.vault.escrows(tradeId);
     expect(released.state).to.equal(2n);
+    expect(await fixture.vault.escrowStatus(tradeId)).to.equal(2n);
     expect(await fixture.outputToken.balanceOf(fixture.recipient.address)).to.equal(
       recipientOutputBefore + escrow.outputAmount,
     );
@@ -279,10 +296,14 @@ describe("AEGIS402 insured escrow Uniswap v4 hook on Sepolia fork", function () 
     const recoveredOutput = victimEscrow.outputAmount;
     const reason = ethers.encodeBytes32String("SANDWICH");
 
-    await fixture.vault.connect(fixture.auditor).payClaim(victimTradeId, reason, { gasLimit: 2_000_000 });
+    await fixture.vault.connect(fixture.auditor).executeAuditDecision(
+      auditDecision(victimTradeId, AUDIT_ACTION_BLOCK_AND_CLAIM, reason, ethers.id("sandwich-audit-evidence")),
+      { gasLimit: 2_000_000 },
+    );
 
     const paid = await fixture.vault.escrows(victimTradeId);
     expect(paid.state).to.equal(3n);
+    expect(await fixture.vault.escrowStatus(victimTradeId)).to.equal(2n);
     expect(await fixture.inputToken.balanceOf(fixture.user.address)).to.equal(userInputBeforeClaim + amountIn);
     expect(await fixture.outputToken.balanceOf(fixture.recipient.address)).to.equal(0n);
     expect(await fixture.outputToken.balanceOf(fixture.insurancePool.target)).to.equal(recoveredOutput);
@@ -309,11 +330,21 @@ describe("AEGIS402 insured escrow Uniswap v4 hook on Sepolia fork", function () 
     await fixture.insurancePool.withdraw(fixture.inputToken.target, fixture.owner.address, reserveBalance);
 
     await expectRevert(
-      fixture.vault.connect(fixture.auditor).payClaim(tradeId, ethers.encodeBytes32String("SANDWICH")),
+      fixture.vault
+        .connect(fixture.auditor)
+        .executeAuditDecision(
+          auditDecision(
+            tradeId,
+            AUDIT_ACTION_BLOCK_AND_CLAIM,
+            ethers.encodeBytes32String("SANDWICH"),
+            ethers.id("underfunded-claim-evidence"),
+          ),
+        ),
     );
 
     const escrow = await fixture.vault.escrows(tradeId);
     expect(escrow.state).to.equal(1n);
+    expect(await fixture.vault.escrowStatus(tradeId)).to.equal(1n);
   });
 
   it("lets empty hookData swaps pass through without escrow", async function () {

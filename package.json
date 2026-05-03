@@ -6,6 +6,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
+    "test:standard": "hardhat test test/aegis-audit-escrow-standard.js --network hardhat",
     "deploy:sepolia": "hardhat run scripts/deploy/sepolia-demo.js --network sepolia",
     "test:fork": "hardhat test test/aegis-escrow-hook.fork.js --network hardhat",
     "e2e:normal": "hardhat run scripts/e2e/normal.js --network hardhat",

@@ -13,6 +13,8 @@ const HOOK_FLAGS = 0x44n;
 const ALL_HOOK_MASK = (1n << 14n) - 1n;
 const MAX_UINT256 = (1n << 256n) - 1n;
 const ZERO_BYTES32 = ethers.ZeroHash;
+const AUDIT_ACTION_RELEASE = 0;
+const AUDIT_ACTION_BLOCK_AND_CLAIM = 1;
 
 const poolManagerAbi = [
   "function initialize((address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) key,uint160 sqrtPriceX96) external returns (int24 tick)",
@@ -78,6 +80,16 @@ function protectedRequest(key, zeroForOne, tradeId, amountIn, settlementRecipien
 
 function tokenAmount(value) {
   return ethers.formatUnits(value, 18);
+}
+
+function auditDecision(escrowId, action, reason = ZERO_BYTES32, evidenceHash = ZERO_BYTES32, actionData = "0x") {
+  return {
+    escrowId,
+    action,
+    reason,
+    evidenceHash,
+    actionData,
+  };
 }
 
 function printableEscrow(escrow) {
@@ -231,12 +243,15 @@ function printScenarioResult(title, result) {
 }
 
 module.exports = {
+  AUDIT_ACTION_BLOCK_AND_CLAIM,
+  AUDIT_ACTION_RELEASE,
   MAX_PRICE_LIMIT,
   MIN_PRICE_LIMIT,
   POOL_MANAGER,
   POOL_SWAP_TEST,
   POOL_MODIFY_LIQUIDITY_TEST,
   assertE2E,
+  auditDecision,
   deployE2EFixture,
   executeProtectedSwap,
   printScenarioResult,

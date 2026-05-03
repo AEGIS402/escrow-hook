@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-interface IAegisEscrowVault {
+import {IAegisAuditEscrow} from "./IAegisAuditEscrow.sol";
+
+interface IAegisEscrowVault is IAegisAuditEscrow {
     struct EscrowInput {
         bytes32 tradeId;
         address user;

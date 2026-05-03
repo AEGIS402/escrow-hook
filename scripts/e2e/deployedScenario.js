@@ -1,7 +1,11 @@
 const { ethers } = require("hardhat");
 const {
+  AUDIT_ACTION_BLOCK_AND_CLAIM,
+  AUDIT_ACTION_RELEASE,
   assertE2E,
+  auditDecision,
   buildContext,
+  executeAuditDecisionOrLegacy,
   executeProtectedUsdtToAegis,
   loadDeployment,
   MIN_PRICE_LIMIT,
@@ -58,7 +62,17 @@ async function runDeployedScenario({ mode, resultFileName, owner }) {
     "normal protection fee must accrue to the insurance pool",
   );
 
-  await waitForTx(ctx.vault.connect(auditor).release(normalTradeId, { gasLimit: 500_000 }));
+  await executeAuditDecisionOrLegacy(
+    ctx,
+    auditor,
+    auditDecision(
+      normalTradeId,
+      AUDIT_ACTION_RELEASE,
+      ethers.encodeBytes32String("CLEAN"),
+      ethers.id(`${mode}-normal-audit-evidence`),
+    ),
+    () => ctx.vault.connect(auditor).release(normalTradeId, { gasLimit: 500_000 }),
+  );
 
   const releasedEscrow = await ctx.vault.escrows(normalTradeId);
   const normalRecipientAfter = await ctx.aegis.balanceOf(user.address);
@@ -87,10 +101,19 @@ async function runDeployedScenario({ mode, resultFileName, owner }) {
   const insuranceAegisBeforeClaim = await ctx.aegis.balanceOf(deployment.contracts.insurancePool);
   const vaultAegisBeforeClaim = await ctx.aegis.balanceOf(deployment.contracts.vault);
 
-  await waitForTx(
-    ctx.vault.connect(auditor).payClaim(sandwichTradeId, ethers.encodeBytes32String("SANDWICH"), {
-      gasLimit: 1_000_000,
-    }),
+  await executeAuditDecisionOrLegacy(
+    ctx,
+    auditor,
+    auditDecision(
+      sandwichTradeId,
+      AUDIT_ACTION_BLOCK_AND_CLAIM,
+      ethers.encodeBytes32String("SANDWICH"),
+      ethers.id(`${mode}-sandwich-audit-evidence`),
+    ),
+    () =>
+      ctx.vault.connect(auditor).payClaim(sandwichTradeId, ethers.encodeBytes32String("SANDWICH"), {
+        gasLimit: 1_000_000,
+      }),
   );
 
   const paidEscrow = await ctx.vault.escrows(sandwichTradeId);
@@ -118,6 +141,7 @@ async function runDeployedScenario({ mode, resultFileName, owner }) {
       name: mode,
     },
     deployment: deployment.contracts,
+    auditEscrowStandard: deployment.auditEscrowStandard || null,
     generatedActors: {
       auditor: auditor.address,
       user: user.address,
@@ -125,6 +149,7 @@ async function runDeployedScenario({ mode, resultFileName, owner }) {
       walletFundEth: ethers.formatEther(fundAmount),
     },
     normalCase: {
+      auditAction: "RELEASE",
       tradeId: normalTradeId,
       inputToken: "USDT",
       outputToken: "AEGIS",
@@ -137,6 +162,7 @@ async function runDeployedScenario({ mode, resultFileName, owner }) {
       userAegisAfterRelease: tokenAmount(normalRecipientAfter),
     },
     sandwichCase: {
+      auditAction: "BLOCK_AND_CLAIM",
       tradeId: sandwichTradeId,
       victimSlippageModel: "max-loose price limit",
       victimSqrtPriceLimitX96: MIN_PRICE_LIMIT.toString(),

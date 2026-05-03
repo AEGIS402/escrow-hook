@@ -61,6 +61,10 @@ contract AegisDemoDeployer {
         poolSwapTest = officialPoolSwapTest;
     }
 
+    function auditEscrowStandardVersion() external pure returns (string memory) {
+        return "1.0.0";
+    }
+
     function deployDemo(DeployConfig calldata config) external returns (DeployedContracts memory deployed) {
         if (config.finalOwner == address(0) || config.initialAuditor == address(0)) revert ZeroAddress();
 

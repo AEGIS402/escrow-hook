@@ -9,6 +9,52 @@ The demo pair is:
 
 Both mock tokens use 18 decimals and expose unrestricted public `mint(address,uint256)` functions. Any address can mint either token for demo and test usage.
 
+## Audit-Responsive Escrow Standard
+
+The reusable standard is split into:
+
+- `IAegisAuditEscrow`: the public interface watched and called by audit agents.
+- `AegisAuditEscrowBase`: the abstract base contract inherited by concrete escrow implementations.
+
+Any contract that follows the standard emits `EscrowRegistered` when funds enter a pending escrow and exposes:
+
+```solidity
+executeAuditDecision(AuditDecision decision)
+```
+
+`AuditDecision` contains:
+
+- `escrowId`: the standardized escrow identifier.
+- `action`: one of `RELEASE`, `BLOCK_AND_CLAIM`, `RECOVER_TO_RESERVE`, or `CUSTOM`.
+- `reason`: a compact reason code such as `CLEAN` or `SANDWICH`.
+- `evidenceHash`: a hash or URI hash for off-chain audit evidence.
+- `actionData`: implementation-specific data for advanced actions.
+
+The base contract enforces:
+
+- only the configured `auditAgent` can execute audit decisions;
+- each escrow can be resolved only once;
+- unknown escrow ids cannot be resolved;
+- concrete contracts decide how each action changes funds.
+
+In this demo, `EscrowVault` inherits the base contract. The protected Uniswap swap `tradeId` is the concrete `escrowId`.
+
+| Standard action | EscrowVault behavior |
+| --- | --- |
+| `RELEASE` | Send escrowed AEGIS output to the settlement recipient. |
+| `BLOCK_AND_CLAIM` | Block recipient settlement, recover escrowed AEGIS into `InsurancePool`, and pay the user the original USDT input amount. |
+| `RECOVER_TO_RESERVE` | Recover escrowed output into `InsurancePool` without a user claim payment. |
+| `CUSTOM` | Reverts in this MVP implementation. |
+
+Compatibility helpers remain available:
+
+```solidity
+release(tradeId)
+payClaim(tradeId, reason)
+```
+
+Both helpers route through the same standardized audit-decision path.
+
 ## Fee Model
 
 The AEGIS protection fee is charged in addition to the Uniswap pool swap fee.
@@ -53,7 +99,11 @@ The hook salt is mined off-chain so the hook address has the required Uniswap v4
 AFTER_SWAP_FLAG | AFTER_SWAP_RETURNS_DELTA_FLAG
 ```
 
+Fresh deployments created by the current deploy script include the audit-responsive escrow standard metadata in `deployments/sepolia-demo.json`.
+
 ### Deployed Addresses
+
+The addresses below are the previously recorded Sepolia demo deployment. They remain valid for the legacy live-demo scripts. Redeploy with `npm run deploy:sepolia` to get fresh bytecode that includes the new `executeAuditDecision` standard entrypoint.
 
 | Contract | Sepolia address |
 | --- | --- |
@@ -103,6 +153,7 @@ npm run deploy:sepolia
 Run the original local fork unit/E2E tests:
 
 ```bash
+npm run test:standard
 npm run test:fork
 npm run e2e
 ```

@@ -1,6 +1,8 @@
 const { ethers, network } = require("hardhat");
 const {
+  AUDIT_ACTION_BLOCK_AND_CLAIM,
   assertE2E,
+  auditDecision,
   deployE2EFixture,
   executeProtectedSwap,
   MAX_PRICE_LIMIT,
@@ -53,7 +55,10 @@ async function main() {
   const insuranceOutputBeforeClaim = await fixture.outputToken.balanceOf(fixture.insurancePool.target);
   const vaultOutputBeforeClaim = await fixture.outputToken.balanceOf(fixture.vault.target);
 
-  await fixture.vault.connect(fixture.auditor).payClaim(tradeId, reason, { gasLimit: 2_000_000 });
+  await fixture.vault.connect(fixture.auditor).executeAuditDecision(
+    auditDecision(tradeId, AUDIT_ACTION_BLOCK_AND_CLAIM, reason, ethers.id("e2e-sandwich-audit-evidence")),
+    { gasLimit: 2_000_000 },
+  );
 
   const paidEscrow = await fixture.vault.escrows(tradeId);
   const userInputAfterClaim = await fixture.inputToken.balanceOf(fixture.user.address);
@@ -81,6 +86,7 @@ async function main() {
       observedChainId: fixture.chainId,
     },
     inputs: {
+      auditAction: "BLOCK_AND_CLAIM",
       tradeId,
       user: fixture.user.address,
       auditor: fixture.auditor.address,

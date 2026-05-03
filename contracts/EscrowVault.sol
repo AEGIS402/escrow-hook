@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {AegisAuditEscrowBase} from "./AegisAuditEscrowBase.sol";
 import {IAegisEscrowVault} from "./interfaces/IAegisEscrowVault.sol";
 import {IAegisInsurancePool} from "./interfaces/IAegisInsurancePool.sol";
 import {SafeERC20} from "./libraries/SafeERC20.sol";
 
-contract EscrowVault is IAegisEscrowVault {
+contract EscrowVault is IAegisEscrowVault, AegisAuditEscrowBase {
     using SafeERC20 for address;
 
     enum State {
         None,
         Pending,
         Released,
-        ClaimPaid
+        ClaimPaid,
+        Recovered
     }
 
     struct Escrow {
@@ -26,8 +28,6 @@ contract EscrowVault is IAegisEscrowVault {
         uint256 expectedOutput;
     }
 
-    address public owner;
-    address public auditor;
     address public hook;
     IAegisInsurancePool public insurancePool;
 
@@ -35,7 +35,6 @@ contract EscrowVault is IAegisEscrowVault {
 
     event HookSet(address indexed hook);
     event AuditorSet(address indexed auditor);
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event ProtectedSwapEscrowed(
         bytes32 indexed tradeId,
         address indexed user,
@@ -54,35 +53,19 @@ contract EscrowVault is IAegisEscrowVault {
     );
     event EscrowRecovered(bytes32 indexed tradeId, address indexed outputToken, uint256 outputAmount, bytes32 reason);
 
-    error NotOwner();
     error NotHook();
-    error NotAuditor();
-    error ZeroAddress();
     error DuplicateTrade(bytes32 tradeId);
     error InvalidEscrowState(bytes32 tradeId, State state);
-
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
-    }
 
     modifier onlyHook() {
         if (msg.sender != hook) revert NotHook();
         _;
     }
 
-    modifier onlyAuditor() {
-        if (msg.sender != auditor) revert NotAuditor();
-        _;
-    }
-
-    constructor(address initialOwner, address initialAuditor, IAegisInsurancePool initialInsurancePool) {
-        if (initialOwner == address(0) || initialAuditor == address(0) || address(initialInsurancePool) == address(0)) {
-            revert ZeroAddress();
-        }
-
-        owner = initialOwner;
-        auditor = initialAuditor;
+    constructor(address initialOwner, address initialAuditor, IAegisInsurancePool initialInsurancePool)
+        AegisAuditEscrowBase(initialOwner, initialAuditor)
+    {
+        if (address(initialInsurancePool) == address(0)) revert ZeroAddress();
         insurancePool = initialInsurancePool;
     }
 
@@ -93,15 +76,12 @@ contract EscrowVault is IAegisEscrowVault {
     }
 
     function setAuditor(address newAuditor) external onlyOwner {
-        if (newAuditor == address(0)) revert ZeroAddress();
-        auditor = newAuditor;
+        _setAuditAgent(newAuditor);
         emit AuditorSet(newAuditor);
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
-        if (newOwner == address(0)) revert ZeroAddress();
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+    function auditor() external view returns (address) {
+        return auditAgent;
     }
 
     function recordEscrow(EscrowInput calldata escrowInput) external onlyHook {
@@ -112,6 +92,13 @@ contract EscrowVault is IAegisEscrowVault {
         ) {
             revert ZeroAddress();
         }
+
+        _registerEscrow(
+            escrowInput.tradeId,
+            escrowInput.user,
+            escrowInput.settlementRecipient,
+            _protectedSwapPolicyHash(escrowInput)
+        );
 
         escrows[escrowInput.tradeId] = Escrow({
             state: State.Pending,
@@ -136,7 +123,43 @@ contract EscrowVault is IAegisEscrowVault {
         );
     }
 
-    function release(bytes32 tradeId) external onlyAuditor {
+    function release(bytes32 tradeId) external onlyAuditAgent {
+        _executeAuditDecision(
+            AuditDecision({
+                escrowId: tradeId,
+                action: AuditAction.RELEASE,
+                reason: bytes32(0),
+                evidenceHash: bytes32(0),
+                actionData: new bytes(0)
+            })
+        );
+    }
+
+    function payClaim(bytes32 tradeId, bytes32 reason) external onlyAuditAgent {
+        _executeAuditDecision(
+            AuditDecision({
+                escrowId: tradeId,
+                action: AuditAction.BLOCK_AND_CLAIM,
+                reason: reason,
+                evidenceHash: bytes32(0),
+                actionData: new bytes(0)
+            })
+        );
+    }
+
+    function _executeAuditAction(AuditDecision memory decision) internal override {
+        if (decision.action == AuditAction.RELEASE) {
+            _releaseEscrow(decision.escrowId);
+        } else if (decision.action == AuditAction.BLOCK_AND_CLAIM) {
+            _payClaimEscrow(decision.escrowId, decision.reason);
+        } else if (decision.action == AuditAction.RECOVER_TO_RESERVE) {
+            _recoverEscrowToReserve(decision.escrowId, decision.reason);
+        } else {
+            revert UnsupportedAuditAction(decision.action);
+        }
+    }
+
+    function _releaseEscrow(bytes32 tradeId) internal {
         Escrow storage escrow = escrows[tradeId];
         if (escrow.state != State.Pending) revert InvalidEscrowState(tradeId, escrow.state);
 
@@ -146,7 +169,7 @@ contract EscrowVault is IAegisEscrowVault {
         emit EscrowReleased(tradeId, escrow.outputToken, escrow.settlementRecipient, escrow.outputAmount);
     }
 
-    function payClaim(bytes32 tradeId, bytes32 reason) external onlyAuditor {
+    function _payClaimEscrow(bytes32 tradeId, bytes32 reason) internal {
         Escrow storage escrow = escrows[tradeId];
         if (escrow.state != State.Pending) revert InvalidEscrowState(tradeId, escrow.state);
 
@@ -156,5 +179,32 @@ contract EscrowVault is IAegisEscrowVault {
         insurancePool.payClaim(escrow.inputToken, escrow.user, escrow.inputAmount, tradeId, reason);
 
         emit EscrowRecovered(tradeId, escrow.outputToken, escrow.outputAmount, reason);
+    }
+
+    function _recoverEscrowToReserve(bytes32 tradeId, bytes32 reason) internal {
+        Escrow storage escrow = escrows[tradeId];
+        if (escrow.state != State.Pending) revert InvalidEscrowState(tradeId, escrow.state);
+
+        escrow.state = State.Recovered;
+        escrow.outputToken.safeTransfer(address(insurancePool), escrow.outputAmount);
+        insurancePool.notifyRecovery(escrow.outputToken, escrow.outputAmount, tradeId);
+
+        emit EscrowRecovered(tradeId, escrow.outputToken, escrow.outputAmount, reason);
+    }
+
+    function _protectedSwapPolicyHash(EscrowInput calldata escrowInput) private pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                "AEGIS_INSURED_SWAP_ESCROW_V1",
+                escrowInput.tradeId,
+                escrowInput.user,
+                escrowInput.inputToken,
+                escrowInput.inputAmount,
+                escrowInput.outputToken,
+                escrowInput.outputAmount,
+                escrowInput.settlementRecipient,
+                escrowInput.expectedOutput
+            )
+        );
     }
 }

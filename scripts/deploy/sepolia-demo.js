@@ -34,6 +34,19 @@ async function mineHookSalt(base, deployerAddress, hookInitFactory) {
   throw new Error("Unable to mine a hook salt with the required v4 permission bits");
 }
 
+async function assertStandardDemoDeployer(demoDeployer) {
+  try {
+    const version = await demoDeployer.auditEscrowStandardVersion();
+    if (version !== "1.0.0") {
+      throw new Error(`unsupported version ${version}`);
+    }
+  } catch (error) {
+    throw new Error(
+      `AEGIS_DEMO_DEPLOYER points to a legacy or incompatible deployer at ${demoDeployer.target}. Unset AEGIS_DEMO_DEPLOYER to deploy a new standard-aware deployer.`,
+    );
+  }
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
@@ -49,6 +62,7 @@ async function main() {
   let demoDeployerReceipt = null;
   if (process.env.AEGIS_DEMO_DEPLOYER) {
     demoDeployer = await ethers.getContractAt("AegisDemoDeployer", process.env.AEGIS_DEMO_DEPLOYER);
+    await assertStandardDemoDeployer(demoDeployer);
     console.log(`Using existing AegisDemoDeployer at ${demoDeployer.target}`);
   } else {
     demoDeployer = await ethers.deployContract("AegisDemoDeployer", [POOL_MANAGER, POOL_SWAP_TEST]);
@@ -124,6 +138,11 @@ async function main() {
       poolManager: POOL_MANAGER,
       poolSwapTest: POOL_SWAP_TEST,
       poolModifyLiquidityTest: "0x0c478023803a644c94c4ce1c1e7b9a087e411b0a",
+    },
+    auditEscrowStandard: {
+      version: "1.0.0",
+      entrypoint: "executeAuditDecision((bytes32,uint8,bytes32,bytes32,bytes))",
+      actions: ["RELEASE", "BLOCK_AND_CLAIM", "RECOVER_TO_RESERVE", "CUSTOM"],
     },
     transactions: {
       aegisDemoDeployer: demoDeployerReceipt ? demoDeployerReceipt.hash : null,

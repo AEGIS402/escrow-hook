@@ -26,7 +26,47 @@ The practical user problem is:
 
 AEGIS402 solves this by delaying final settlement and adding an insurance pool behind protected swaps.
 
-## 3. Core Mechanism
+## 3. Audit-Responsive Escrow Standard
+
+AEGIS402 standardizes the post-audit response layer as an audit-responsive escrow interface.
+
+Any escrow implementation that follows the standard:
+
+- emits `EscrowRegistered` when protected funds enter a pending escrow;
+- exposes `executeAuditDecision(AuditDecision decision)` for the authorized audit agent;
+- stores a generic escrow status of `None`, `Pending`, or `Resolved`;
+- prevents duplicate escrow ids and duplicate audit resolutions;
+- keeps evidence data off-chain while committing an `evidenceHash` on-chain.
+
+The standard audit actions are:
+
+```text
+RELEASE
+BLOCK_AND_CLAIM
+RECOVER_TO_RESERVE
+CUSTOM
+```
+
+`AegisAuditEscrowBase` implements the reusable access control, status tracking, duplicate-resolution protection, and standard events. Concrete escrows inherit the base and implement their domain-specific `_executeAuditAction` behavior.
+
+For this Uniswap v4 demo:
+
+- `tradeId` is the concrete `escrowId`;
+- `RELEASE` sends escrowed swap output to the settlement recipient;
+- `BLOCK_AND_CLAIM` blocks settlement, moves escrowed output into the insurance pool, and pays the user the original input amount;
+- `RECOVER_TO_RESERVE` moves escrowed output into the insurance pool without paying a claim;
+- `CUSTOM` is unsupported and reverts.
+
+The legacy helper methods remain available for simple integrations:
+
+```text
+release(tradeId)
+payClaim(tradeId, reason)
+```
+
+Both helpers route through the same standardized audit-decision path.
+
+## 4. Core Mechanism
 
 The MVP uses the official Uniswap v4 contracts on a Sepolia fork:
 
@@ -44,7 +84,7 @@ The protected flow is:
 6. If `hookData` is empty, the swap passes through normally.
 7. If `hookData` contains a protected trade request, the hook uses Uniswap v4 custom accounting to redirect the full output delta to `EscrowVault`.
 8. The vault records the trade as `Pending`.
-9. The auditor either releases the escrowed output or pays an insurance claim.
+9. The audit agent calls `executeAuditDecision` with either `RELEASE` or `BLOCK_AND_CLAIM`.
 
 The hook requires the Uniswap v4 permission bits:
 
@@ -54,7 +94,7 @@ AFTER_SWAP_FLAG | AFTER_SWAP_RETURNS_DELTA_FLAG
 
 The test deployment mines a CREATE2 salt so the hook address has the required lower 14-bit permission pattern.
 
-## 4. Contracts
+## 5. Contracts
 
 ### AegisEscrowHook
 
@@ -73,7 +113,7 @@ For unprotected swaps with empty `hookData`, it returns zero delta and does not 
 
 ### EscrowVault
 
-The vault stores protected swap records.
+The vault stores protected swap records and inherits the reusable audit-responsive escrow base.
 
 States:
 
@@ -82,12 +122,14 @@ None
 Pending
 Released
 ClaimPaid
+Recovered
 ```
 
-The auditor can:
+The audit agent can:
 
-- `release(tradeId)`: send escrowed output to the settlement recipient;
-- `payClaim(tradeId, reason)`: block recipient settlement, move escrowed output to the insurance pool, and ask the insurance pool to pay the user in the input token.
+- `executeAuditDecision(RELEASE)`: send escrowed output to the settlement recipient;
+- `executeAuditDecision(BLOCK_AND_CLAIM)`: block recipient settlement, move escrowed output to the insurance pool, and ask the insurance pool to pay the user in the input token;
+- `executeAuditDecision(RECOVER_TO_RESERVE)`: move escrowed output to the insurance pool without a claim payment.
 
 ### InsurancePool
 
@@ -121,7 +163,7 @@ The request includes:
 
 The adapter pulls `amountIn + protectionFee` from the user, sends the fee to the insurance pool, approves the official `PoolSwapTest`, and passes protected hook data into the swap.
 
-## 5. Demo Scenarios
+## 6. Demo Scenarios
 
 ### Normal Protected Swap
 
@@ -130,7 +172,7 @@ User swaps token0 for token1.
 Hook escrows token1 output.
 Vault state becomes Pending.
 Auditor marks the trade clean.
-Vault releases token1 to the settlement recipient.
+Vault executes `RELEASE` and sends token1 to the settlement recipient.
 Insurance pool keeps the protection fee.
 ```
 
@@ -140,7 +182,7 @@ Insurance pool keeps the protection fee.
 Attacker front-runs token0 -> token1.
 Victim performs protected token0 -> token1 swap at a worse price.
 Attacker back-runs token1 -> token0.
-Auditor marks victim trade as SANDWICH.
+Audit agent marks victim trade as SANDWICH.
 Vault blocks settlement recipient release.
 Insurance pool pays the victim the original token0 input amount.
 Vault moves escrowed token1 output into the insurance pool as recovery.
@@ -155,7 +197,7 @@ Output goes directly to the swap caller.
 Vault remains unchanged.
 ```
 
-## 6. MVP Scope
+## 7. MVP Scope
 
 Included:
 
@@ -163,6 +205,7 @@ Included:
 - Exact-input swaps only.
 - One official Sepolia v4 PoolManager on a local fork.
 - CREATE2 hook permission mining in tests.
+- Audit-responsive escrow standard interface and abstract base.
 - Protection fee collection.
 - Escrow release.
 - Insurance claim payout.
@@ -172,15 +215,18 @@ Excluded:
 
 - Native ETH support.
 - Universal Router integration.
-- Automated off-chain MEV detection.
+- Production off-chain MEV detection.
 - Multi-pool routing.
 - Dynamic risk pricing.
 - Production-grade governance and dispute process.
 
-## 7. Success Criteria
+## 8. Success Criteria
 
 The MVP is successful when:
 
+- escrow contracts expose the standard `executeAuditDecision` entrypoint;
+- only the authorized audit agent can execute audit decisions;
+- duplicate audit decisions and unknown escrow ids revert;
 - protected swap output is escrowed instead of delivered directly;
 - clean audits release escrowed output to the intended recipient;
 - failed audits block recipient settlement;
@@ -189,13 +235,14 @@ The MVP is successful when:
 - unprotected swaps still behave normally;
 - duplicate trade IDs and insufficient insurance reserves revert.
 
-## 8. Test Command
+## 9. Test Command
 
 Use Node 22 and Hardhat:
 
 ```bash
 npm install
 npm run compile
+npm run test:standard
 npm run test:fork
 ```
 

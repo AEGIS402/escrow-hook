@@ -9,6 +9,8 @@ const MIN_PRICE_LIMIT = 4295128740n;
 const MAX_PRICE_LIMIT = 1461446703485210103287273052203988822378723970341n;
 const MAX_UINT256 = (1n << 256n) - 1n;
 const ZERO_BYTES32 = ethers.ZeroHash;
+const AUDIT_ACTION_RELEASE = 0;
+const AUDIT_ACTION_BLOCK_AND_CLAIM = 1;
 
 const poolManagerAbi = [
   "function initialize((address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) key,uint160 sqrtPriceX96) external returns (int24 tick)",
@@ -37,6 +39,28 @@ async function signerAddress(signer) {
 
 function tokenAmount(value) {
   return ethers.formatUnits(value, 18);
+}
+
+function auditDecision(escrowId, action, reason = ZERO_BYTES32, evidenceHash = ZERO_BYTES32, actionData = "0x") {
+  return {
+    escrowId,
+    action,
+    reason,
+    evidenceHash,
+    actionData,
+  };
+}
+
+function supportsAuditEscrowStandard(deployment) {
+  return Boolean(deployment.auditEscrowStandard);
+}
+
+async function executeAuditDecisionOrLegacy(ctx, auditAgent, decision, legacyCall) {
+  if (supportsAuditEscrowStandard(ctx.deployment)) {
+    return waitForTx(ctx.vault.connect(auditAgent).executeAuditDecision(decision, { gasLimit: 1_000_000 }));
+  }
+
+  return waitForTx(legacyCall());
 }
 
 function loadDeployment() {
@@ -233,11 +257,15 @@ function printableEscrow(escrow) {
 }
 
 module.exports = {
+  AUDIT_ACTION_BLOCK_AND_CLAIM,
+  AUDIT_ACTION_RELEASE,
   MAX_PRICE_LIMIT,
   MIN_PRICE_LIMIT,
   assertE2E,
+  auditDecision,
   buildContext,
   executeProtectedUsdtToAegis,
+  executeAuditDecisionOrLegacy,
   loadDeployment,
   plainAegisToUsdtSwap,
   plainUsdtToAegisSwap,

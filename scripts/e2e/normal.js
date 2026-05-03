@@ -1,6 +1,8 @@
 const { ethers } = require("hardhat");
 const {
+  AUDIT_ACTION_RELEASE,
   assertE2E,
+  auditDecision,
   deployE2EFixture,
   executeProtectedSwap,
   printScenarioResult,
@@ -34,7 +36,16 @@ async function main() {
     "insurance pool must receive the protection fee",
   );
 
-  await fixture.vault.connect(fixture.auditor).release(tradeId);
+  await fixture.vault
+    .connect(fixture.auditor)
+    .executeAuditDecision(
+      auditDecision(
+        tradeId,
+        AUDIT_ACTION_RELEASE,
+        ethers.encodeBytes32String("CLEAN"),
+        ethers.id("e2e-normal-audit-evidence"),
+      ),
+    );
 
   const releasedEscrow = await fixture.vault.escrows(tradeId);
   const recipientOutputAfter = await fixture.outputToken.balanceOf(fixture.recipient.address);
@@ -62,6 +73,7 @@ async function main() {
       poolModifyLiquidityTest: "0x0c478023803a644c94c4ce1c1e7b9a087e411b0a",
     },
     inputs: {
+      auditAction: "RELEASE",
       tradeId,
       user: fixture.user.address,
       auditor: fixture.auditor.address,
